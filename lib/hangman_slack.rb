@@ -34,6 +34,10 @@ class HangBot < SlackRubyBot::Bot
     say("#{@view.show_state} (#{@engine.lives} lives remaining)")
   end
 
+  def self.game_started?
+    @engine.nil? || @engine.game_over?
+  end
+
   command 'start' do |client, data, match|
     @client = client
     @data = data
@@ -47,7 +51,7 @@ class HangBot < SlackRubyBot::Bot
     @data = data
     guess = match[:expression]
 
-    if @engine.game_over?
+    if game_started?
       say("There's no game going on")
     elsif !@view.input_sane?(guess)
       say("'#{guess}' is not a valid input.")
@@ -60,6 +64,17 @@ class HangBot < SlackRubyBot::Bot
       else
         show_state
       end
+    end
+  end
+
+  command 'state' do |client, data, match|
+    @client = client
+    @data = data
+
+    if game_started?
+      say("There's no game going on")
+    else
+      show_state
     end
   end
 end
