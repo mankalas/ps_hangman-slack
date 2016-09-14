@@ -30,13 +30,37 @@ class HangBot < SlackRubyBot::Bot
     @client.say(:text => text, :channel => @data.channel)
   end
 
+  def self.show_state
+    say("#{@view.show_state} (#{@engine.lives} lives remaining)")
+  end
+
   command 'start' do |client, data, match|
     @client = client
     @data = data
 
-    say('Okie dokie')
     start
-    say("The secret word is #{@view.show_state}")
+    show_state
+  end
+
+  command 'guess' do |client, data, match|
+    @client = client
+    @data = data
+    guess = match[:expression]
+
+    if @engine.game_over?
+      say("There's no game going on")
+    elsif !@view.input_sane?(guess)
+      say("'#{guess}' is not a valid input.")
+    else
+      @engine.guess(guess)
+      if @engine.win?
+        say("You've won! The word was '#{@engine.word}'")
+      elsif @engine.lost?
+        say("You've lost! The word was '#{@engine.word}'")
+      else
+        show_state
+      end
+    end
   end
 end
 
