@@ -22,7 +22,7 @@ class HangBot < SlackRubyBot::Bot
   def self.start
     @validator = Hangman::CaseInsensitiveValidator.new
     @word_picker = Hangman::WordPicker.new
-    @engine = Hangman::Engine.new(word: @word_picker.pick, lives: 5, validator: @validator)
+    @engine = Hangman::Engine.new(word: @word_picker.pick, lives: 8, validator: @validator)
     @view = HangBotView.new(engine: @engine)
   end
 
