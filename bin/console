@@ -10,5 +10,7 @@ require "hangman_slack"
 # require "pry"
 # Pry.start
 
+HangBot.run
+
 require "irb"
 IRB.start

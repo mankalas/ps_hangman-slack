@@ -1,7 +1,5 @@
 require 'spec_helper'
 
-require 'spec_helper'
-
 describe HangmanSlack do
   it 'has a version number' do
     expect(HangmanSlack::VERSION).not_to be nil

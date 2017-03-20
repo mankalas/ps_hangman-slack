@@ -25,15 +25,48 @@ class HangBotWordPicker
 end
 
 class HangBot < SlackRubyBot::Bot
+  help do
+    title 'Hangman Bot'
+    desc "You miss DevTrain? You like Slack? Now, you can play Hangman on Slack! :partyparrot:\n\n" \
+         "In order to play, you must tell the moderator what command to execute (`hg start`).\n\n" \
+         "There is a pretty unfair system of score that goes on forever, that is unless someone enters 'reset' command.\n\n" \
+         "Thanks to Van for the starting pointers and Tiger for the Slack admin stuff."
+
+    command 'start' do
+      desc "Starts a new game, ie. ask you to guess a new word."
+    end
+
+    command 'guess' do
+      desc "Submit a guess obviously. Mind the space(s) between the command and your guess."
+    end
+
+    command 'word' do
+      desc "If you have what it takes, you can try to guess the whole word. Mind the space(s) between the command and your guess."
+    end
+
+    command 'state' do
+      desc "Displays the state of the game, ie. the masked word, the gallow and the letters that have already been guessed."
+    end
+
+    command 'score' do
+      desc "Displays the leaderboard, in no particular order, which is an order by itself."
+    end
+
+    command 'reset' do
+      desc "Reset the leaderboard. Mainly used by losers."
+    end
+
+  end
+
   @@leaderboard = {}
 
   def self.start
     say("Let's start a game")
     @validator = Hangman::CaseInsensitiveValidator.new
     @word_picker = HangBotWordPicker.new
-    @engine = Hangman::Engine.new(word: @word_picker.pick, lives: 8, validator: @validator)
+    @engine = Hangman::Engine.new(word: @word_picker.pick, lives: 6, validator: @validator)
     @view = HangBotView.new(engine: @engine)
-    #    show_state
+    show_state
   end
 
   def self.say(text)
@@ -41,8 +74,9 @@ class HangBot < SlackRubyBot::Bot
   end
 
   def self.show_state
-    say("#{@view.show_state} (#{@engine.lives} lives remaining)")
-    say("Already guessed #{@validator.guessed_letters.to_a.join(', ')}")
+    say("#{@view.show_state} :hang#{@engine.lives + 1}:") #+1 because I can't count
+    guesses = @validator.guessed_letters
+    say("Already guessed #{guesses.to_a.join(', ')}") if !guesses.empty?
   end
 
   def self.has_game?
@@ -87,10 +121,9 @@ class HangBot < SlackRubyBot::Bot
     if @engine.win?
       say("You've won! The word was '#{@engine.word}'")
       @@leaderboard[data.user] += @engine.word.length
-    elsif @engine.lost?
-      say("You've lost! The word was '#{@engine.word}'")
     else
       show_state
+      say("You've lost! The word was '#{@engine.word}'") if @engine.lost?
     end
   end
 
@@ -127,12 +160,17 @@ class HangBot < SlackRubyBot::Bot
       user = data.user
       init_user_score(user)
 
-      @engine.guess_word(word) ? correct_guess(user) : incorrect_guess(user)
-      show_game_state
+      if @engine.guess_word(word)
+        say("You've find the word #{@engine.word}! Congrats!")
+        @@leaderboard[user] += @engine.word.length + 5
+      else
+        incorrect_guess(user)
+        show_
+      end
     end
   end
 
-  command 'scores' do |client, data, match|
+  command 'score' do |client, data, match|
     start_command(client, data)
 
     @@leaderboard.each do |key, value|
@@ -148,5 +186,3 @@ class HangBot < SlackRubyBot::Bot
     say("Back to zero")
   end
 end
-
-#HangBot.run
